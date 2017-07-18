@@ -117,6 +117,7 @@
       shell: |
         (echo "RAILS_ENV=production"; \
          echo "RAILS_SERVE_STATIC_FILES=yes"; \
+         echo "RAILS_LOG_TO_STDOUT=yes"; \
          echo "SECRET_KEY_BASE=$(cat config/secrets.key)"; \
          echo "http_proxy=http://127.0.0.1:3128"; \
          echo "https_proxy=http://127.0.0.1:3128") > \

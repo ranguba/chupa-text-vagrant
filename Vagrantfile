@@ -21,10 +21,10 @@ Vagrant.configure("2") do |config|
   config.vm.define(name) do |node|
     node.vm.box = "bento/ubuntu-17.04"
     node.vm.network "forwarded_port", guest: 3000, host: 20080
-    log_directory = "/var/log/chupa-text"
-    if File.exist?(log_directory)
-      node.vm.synced_folder log_directory, "/var/log/chupa-text"
-    end
+    # log_directory = "/var/log/chupa-text"
+    # if File.exist?(log_directory)
+    #   node.vm.synced_folder log_directory, "/var/log/chupa-text"
+    # end
 
     node.vm.provider "virtualbox" do |virtualbox|
       virtualbox.memory = "2048"
