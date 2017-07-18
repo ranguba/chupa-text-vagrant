@@ -1,16 +1,18 @@
-# Dockerfile for ChupaText
+# Vagrant for ChupaText
 
 ## Install
 
-Install Docker:
+[Install Vagrant](https://www.vagrantup.com/downloads.html).
 
-  * [For Debian](https://docs.docker.com/engine/installation/linux/docker-ce/debian/)
+[Install VirtualBox](https://www.virtualbox.org/wiki/Linux_Downloads).
 
-  * [For Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
+Install Ansible:
 
-  * [For CentOS 7](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
+  * [For Debian GNU/Linux](http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-apt-debian)
 
-[Install Docker Compose](https://docs.docker.com/compose/install/).
+  * [For Ubuntu](http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-apt-ubuntu)
+
+  * [For CentOS](http://docs.ansible.com/ansible/intro_installation.html#latest-release-via-yum)
 
 Install Git:
 
@@ -29,29 +31,15 @@ For CentOS:
 Clone this repository:
 
 ```console
-% git clone https://github.com/ranguba/chupa-text-docker.git
-% sudo mv chupa-text-docker /var/lib/chupa-text
+% git clone https://github.com/ranguba/chupa-text-vagrant.git
+% sudo mv chupa-text-vagrant /var/lib/chupa-text
 ```
 
-Build Docker images. It takes long time...:
+Start virtual machine. It takes long time...:
 
 ```console
 % cd /var/lib/chupa-text
-% sudo /usr/local/bin/docker-compose build --force-rm
-```
-
-Create log directory:
-
-```console
-% sudo mkdir -p /var/log/chupa-text
-```
-
-Install logrotate configuration:
-
-```console
-% sudo cp \
-    /var/lib/chupa-text/etc/logrotate.d/chupa-text \
-                       /etc/logrotate.d/chupa-text
+% vagrant up
 ```
 
 Install systemd service file:
@@ -72,7 +60,7 @@ Run ChupaText service:
 
 ## Usage
 
-You can use ChupaText via HTTP or command line.
+You can use ChupaText via HTTP.
 
 http://localhost:20080/ provides form to text extraction. You can use
 this style by your Web browser.
@@ -156,28 +144,6 @@ has the following keys:
     exist. ChupaText needs binary data but JSON doesn't support binary
     data because JSON is a text format. If `data` is text data such as
     SVG, this key doesn't exist.
-
-You can use ChupaText as command line tool by the following command
-line:
-
-```console
-% sudo /usr/local/bin/docker-compose \
-    --file /var/lib/chupa-text/docker-compose.yml \
-    exec chupa-text \
-      xvfb-run -a chupa-text /tmp/sample.pdf
-```
-
-If your user is a member of `docker` group, you can omit `sudo` like
-the following:
-
-```console
-% /usr/local/bin/docker-compose \
-    --file /var/lib/chupa-text/docker-compose.yml \
-    exec chupa-text \
-      xvfb-run -a chupa-text /tmp/sample.pdf
-```
-
-Command line interface uses the same JSON format as Web API.
 
 ## Author
 
