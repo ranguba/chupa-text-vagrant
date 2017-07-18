@@ -1,0 +1,138 @@
+# Copyright (C) 2017  Kouhei Sutou <kou@clear-code.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+- hosts: servers
+  become: yes
+  tasks:
+    - name: Set timezone
+      # Ansible 2.2 is required
+      # timezone:
+      #   name: Asia/Tokyo
+      command: timedatectl set-timezone Asia/Tokyo
+    - name: Enable NTP
+      command: timedatectl set-ntp true
+    - name: Upgrade packages
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+        upgrade: safe
+    - name: Install packages
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - apache2
+        - apache2-dev
+        - curl
+        - g++
+        - gcc
+        - git
+        - libapr1-dev
+        - libaprutil1-dev
+        - libcurl4-openssl-dev
+        - libreoffice
+        - libssl-dev
+        - make
+        - nodejs
+        - nodejs-legacy
+        - npm
+        - ruby
+        - ruby-dev
+        - sudo
+        - tzdata
+        - xvfb
+        - zlib1g-dev
+    - name: Install Bundler
+      gem:
+        name: bundler
+        user_install: no
+    - name: Install Yarn
+      npm:
+        name: yarn
+        global: yes
+    - name: Create chupa-text user
+      user:
+        name: chupa-text
+        groups:
+          - chupa-text
+          - sudo
+        append: true
+    - name: Enable no password sudo
+      copy:
+        src: etc/sudoers.d/no-password
+        dest: /etc/sudoers.d/no-password
+    - name: Clone ChupaText HTTP server
+      git:
+        repo: https://github.com/ranguba/chupa-text-http-server.git
+        dest: ~/chupa-text-http-server
+        depth: 1
+      become_user: chupa-text
+    - name: Copy ChupaText HTTP server configurations
+      copy:
+        src: home/chupa-text/chupa-text-http-server/{{ item }}
+        dest: /home/chupa-text/chupa-text-http-server/{{ item }}
+      with_items:
+        - Gemfile.local
+    - name: Install dependencies
+      bundle:
+        chdir: ~/chupa-text-http-server
+        exclude_groups:
+          - development
+          - test
+        user_install: no
+      become_user: chupa-text
+    - name: Compile assets
+      shell: RAILS_ENV=production bin/rails assets:precompile
+      args:
+        chdir: ~/chupa-text-http-server
+      become_user: chupa-text
+    - name: Check secret key file
+      stat:
+        path: ~/chupa-text-http-server/config/secrets.yml
+      become_user: chupa-text
+      register: chupa_text_config_secrets
+    - name: Generate secret key
+      shell: |
+        (echo "production:"; \
+         echo "  secret_key_base: $(RAILS_ENV=production bin/rails secret)") > \
+         config/secrets.yml
+      args:
+        chdir: ~/chupa-text-http-server
+      become_user: chupa-text
+      when: not chupa_text_config_secrets.exists
+    - name: Enable logrotate
+      copy:
+        src: etc/logrotate.d/{{ item }}
+        dest: /etc/logrotate.d/{{ item }}
+      with_items:
+        - chupa-text
+    - name: Enable systemd service
+      copy:
+        src: usr/lib/systemd/system/{{ item }}
+        dest: /usr/lib/systemd/system/{{ item }}
+      with_items:
+        - chupa-text.service
+      notify:
+        - Reload systemd
+        - Reload ChupaText HTTP server
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload
+    - name: Reload ChupaText HTTP server
+      service:
+        name: chupa-text
+        enabled: yes
+        state: restarted

@@ -1,0 +1,14 @@
+[Unit]
+Description=ChupaText - Text extraction service
+After=network.target
+
+[Service]
+Type=simple
+User=chupa-text
+Group=chupa-text
+WorkingDirectory=/home/chupa-text/chupa-text-http-server
+ExecStart=RAILS_ENV=production xvfb-run bin/rails server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
