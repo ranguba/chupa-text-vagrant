@@ -1,0 +1,15 @@
+[Unit]
+Description=ChupaText - Text extraction service
+After=network.target
+
+[Service]
+Type=fork
+User=root
+Group=root
+WorkingDirectory=/var/lib/chupa-text
+ExecStart=/usr/bin/vagrant up
+ExecStop=/usr/bin/vagrant halt
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
