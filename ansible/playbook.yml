@@ -24,6 +24,9 @@
       command: timedatectl set-timezone Asia/Tokyo
     - name: Enable NTP
       command: timedatectl set-ntp true
+    - name: Install aptitude
+      apt:
+        name: aptitude
     - name: Upgrade packages
       apt:
         update_cache: yes
@@ -50,6 +53,7 @@
         - npm
         - ruby
         - ruby-dev
+        - squid
         - sudo
         - tzdata
         - xvfb
@@ -65,14 +69,13 @@
     - name: Create chupa-text user
       user:
         name: chupa-text
-        groups:
-          - chupa-text
-          - sudo
+        groups: sudo
         append: true
     - name: Enable no password sudo
       copy:
         src: etc/sudoers.d/no-password
         dest: /etc/sudoers.d/no-password
+        validate: "visudo -cf %s"
     - name: Clone ChupaText HTTP server
       git:
         repo: https://github.com/ranguba/chupa-text-http-server.git
@@ -85,8 +88,9 @@
         dest: /home/chupa-text/chupa-text-http-server/{{ item }}
       with_items:
         - Gemfile.local
+      become_user: chupa-text
     - name: Install dependencies
-      bundle:
+      bundler:
         chdir: ~/chupa-text-http-server
         exclude_groups:
           - development
@@ -98,20 +102,28 @@
       args:
         chdir: ~/chupa-text-http-server
       become_user: chupa-text
-    - name: Check secret key file
+    - name: Check secret key
       stat:
-        path: ~/chupa-text-http-server/config/secrets.yml
+        path: ~/chupa-text-http-server/config/secrets.key
       become_user: chupa-text
-      register: chupa_text_config_secrets
+      register: chupa_text_config_secrets_key
     - name: Generate secret key
-      shell: |
-        (echo "production:"; \
-         echo "  secret_key_base: $(RAILS_ENV=production bin/rails secret)") > \
-         config/secrets.yml
+      shell: RAILS_ENV=production bin/rails secret > config/secrets.key
       args:
         chdir: ~/chupa-text-http-server
       become_user: chupa-text
-      when: not chupa_text_config_secrets.exists
+      when: not chupa_text_config_secrets_key.stat.exists
+    - name: Generate .env
+      shell: |
+        (echo "RAILS_ENV=production"; \
+         echo "RAILS_SERVE_STATIC_FILES=yes"; \
+         echo "SECRET_KEY_BASE=$(cat config/secrets.key)"; \
+         echo "http_proxy=http://127.0.0.1:3128"; \
+         echo "https_proxy=http://127.0.0.1:3128") > \
+         .env
+      args:
+        chdir: ~/chupa-text-http-server
+      become_user: chupa-text
     - name: Enable logrotate
       copy:
         src: etc/logrotate.d/{{ item }}
@@ -120,8 +132,8 @@
         - chupa-text
     - name: Enable systemd service
       copy:
-        src: usr/lib/systemd/system/{{ item }}
-        dest: /usr/lib/systemd/system/{{ item }}
+        src: lib/systemd/system/{{ item }}
+        dest: /lib/systemd/system/{{ item }}
       with_items:
         - chupa-text.service
       notify:

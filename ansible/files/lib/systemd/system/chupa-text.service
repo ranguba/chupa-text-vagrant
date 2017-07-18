@@ -7,7 +7,8 @@ Type=simple
 User=chupa-text
 Group=chupa-text
 WorkingDirectory=/home/chupa-text/chupa-text-http-server
-ExecStart=RAILS_ENV=production xvfb-run bin/rails server
+EnvironmentFile=/home/chupa-text/chupa-text-http-server/.env
+ExecStart=/usr/bin/xvfb-run bin/rails server
 Restart=always
 
 [Install]

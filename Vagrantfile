@@ -17,26 +17,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "bento/ubuntu-17.04"
-  config.vm.network "forwarded_port", guest: 20080, host: 20080
-  log_directory = "/var/log/chupa-text"
-  if File.exist?(log_directory)
-    config.vm.synced_folder log_directory, "/var/log/chupa-text"
-  end
+  name = "chupa-text"
+  config.vm.define(name) do |node|
+    node.vm.box = "bento/ubuntu-17.04"
+    node.vm.network "forwarded_port", guest: 3000, host: 20080
+    log_directory = "/var/log/chupa-text"
+    if File.exist?(log_directory)
+      node.vm.synced_folder log_directory, "/var/log/chupa-text"
+    end
 
-  config.vm.provider "virtualbox" do |virtualbox|
-    virtualbox.memory = "2048"
-    # virtualbox.memory = "4096"
-  end
+    node.vm.provider "virtualbox" do |virtualbox|
+      virtualbox.memory = "2048"
+      # virtualbox.memory = "4096"
+    end
 
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "ansible/playbook.yml"
-    ansible.groups = {
-      "servers" => ["chupa-text"],
-    }
-    ansible.host_key_checking = false
-    # ansible.raw_arguments  = [
-    #   "-vvv",
-    # ]
+    node.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/playbook.yml"
+      ansible.groups = {
+        "servers" => [name],
+      }
+      ansible.host_key_checking = false
+      # ansible.raw_arguments  = [
+      #   "-vvv",
+      # ]
+    end
   end
 end
