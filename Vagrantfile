@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 #
-# Copyright (C) 2017  Kouhei Sutou <kou@clear-code.com>
+# Copyright (C) 2017-2019  Sutou Kouhei <kou@clear-code.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 Vagrant.configure("2") do |config|
   name = "chupa-text"
   config.vm.define(name) do |node|
-    node.vm.box = "bento/ubuntu-17.04"
+    node.vm.box = "bento/ubuntu-18.04"
     node.vm.network "forwarded_port", guest: 3000, host: 20080
     # log_directory = "/var/log/chupa-text"
     # if File.exist?(log_directory)

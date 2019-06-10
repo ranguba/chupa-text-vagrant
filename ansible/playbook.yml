@@ -18,15 +18,10 @@
   become: yes
   tasks:
     - name: Set timezone
-      # Ansible 2.2 is required
-      # timezone:
-      #   name: Asia/Tokyo
-      command: timedatectl set-timezone Asia/Tokyo
+      timezone:
+        name: Asia/Tokyo
     - name: Enable NTP
       command: timedatectl set-ntp true
-    - name: Install aptitude
-      apt:
-        name: aptitude
     - name: Upgrade packages
       apt:
         update_cache: yes
@@ -34,30 +29,29 @@
         upgrade: safe
     - name: Install packages
       apt:
-        name: "{{ item }}"
-      with_items:
-        - apache2
-        - apache2-dev
-        - curl
-        - g++
-        - gcc
-        - git
-        - libapr1-dev
-        - libaprutil1-dev
-        - libcurl4-openssl-dev
-        - libreoffice
-        - libssl-dev
-        - make
-        - nodejs
-        - nodejs-legacy
-        - npm
-        - ruby
-        - ruby-dev
-        - squid
-        - sudo
-        - tzdata
-        - xvfb
-        - zlib1g-dev
+        name:
+          - apache2
+          - apache2-dev
+          - curl
+          - g++
+          - gcc
+          - git
+          - libapr1-dev
+          - libaprutil1-dev
+          - libcurl4-openssl-dev
+          - libreoffice
+          - libssl-dev
+          - make
+          - nodejs
+          - nodejs-legacy
+          - npm
+          - ruby
+          - ruby-dev
+          - squid
+          - sudo
+          - tzdata
+          - xvfb
+          - zlib1g-dev
     - name: Install Bundler
       gem:
         name: bundler
